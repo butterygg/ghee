@@ -11,14 +11,16 @@ contract Market {
     Oracle public oracle;
     bool public isResolved;
     bool public outcome;
-    OutcomeToken longToken;
-    OutcomeToken shortToken;
+    OutcomeToken public longToken;
+    OutcomeToken public shortToken;
 
-    constructor(bytes32 _questionId, bytes32 _tokenName, Oracle _oracle) {
+    constructor(bytes32 _questionId, string memory _tokenName, Oracle _oracle) {
         questionId = _questionId;
-        
-        longToken = new OutcomeToken(string(abi.encodePacked("Long ", _tokenName)), string(abi.encodePacked("L", _tokenName)));
-        shortToken = new OutcomeToken(string(abi.encodePacked("Short ", _tokenName)), string(abi.encodePacked("S", _tokenName)));
+
+        longToken =
+            new OutcomeToken(string(abi.encodePacked("Long ", _tokenName)), string(abi.encodePacked("L", _tokenName)));
+        shortToken =
+            new OutcomeToken(string(abi.encodePacked("Short ", _tokenName)), string(abi.encodePacked("S", _tokenName)));
 
         marketMaker = new MarketMaker(longToken, shortToken);
         oracle = _oracle;
@@ -26,13 +28,16 @@ contract Market {
 
     function split() external payable {
         uint256 amount = msg.value;
-        
+
         longToken.mint(msg.sender, amount);
         shortToken.mint(msg.sender, amount);
     }
 
     function merge(uint256 amount) external {
-        require(longToken.balanceOf(msg.sender) >= amount && shortToken.balanceOf(msg.sender) >= amount, "Insufficient balance");
+        require(
+            longToken.balanceOf(msg.sender) >= amount && shortToken.balanceOf(msg.sender) >= amount,
+            "Insufficient balance"
+        );
 
         longToken.burn(msg.sender, amount);
         shortToken.burn(msg.sender, amount);
@@ -46,4 +51,3 @@ contract Market {
         isResolved = true;
     }
 }
-

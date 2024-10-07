@@ -10,7 +10,10 @@ interface IRealityETHAdapter {
         uint32 opening_ts,
         uint256 nonce,
         uint256 min_bond
-    ) external payable returns (bytes32);
+    )
+        external
+        payable
+        returns (bytes32);
 
     function resultForOnceSettled(bytes32 question_id) external view returns (bytes32);
 
@@ -21,7 +24,6 @@ interface IRealityETHAdapter {
     function submitAnswer(bytes32 question_id, bytes32 answer, uint256 max_previous) external payable;
 
     function getBestAnswer(bytes32 question_id) external view returns (bytes32);
-
 }
 
 contract Oracle is IRealityETHAdapter {
@@ -45,13 +47,18 @@ contract Oracle is IRealityETHAdapter {
         uint32 opening_ts,
         uint256 nonce,
         uint256 min_bond
-    ) external payable override returns (bytes32) {
+    )
+        external
+        payable
+        override
+        returns (bytes32)
+    {
         bytes32 questionId = keccak256(abi.encodePacked(question, nonce));
         require(questions[questionId] == bytes32(0), "Question already exists");
-        
+
         questions[questionId] = keccak256(abi.encodePacked(question));
         timeouts[questionId] = timeout;
-        
+
         return questionId;
     }
 
@@ -71,7 +78,7 @@ contract Oracle is IRealityETHAdapter {
     function submitAnswer(bytes32 question_id, bytes32 answer, uint256 max_previous) external payable override {
         require(questions[question_id] != bytes32(0), "Question does not exist");
         require(!settled[question_id], "Question already settled");
-        
+
         answers[question_id] = answer;
         settled[question_id] = true;
     }
@@ -79,5 +86,4 @@ contract Oracle is IRealityETHAdapter {
     function getBestAnswer(bytes32 question_id) external view override returns (bytes32) {
         return answers[question_id];
     }
-
 }
