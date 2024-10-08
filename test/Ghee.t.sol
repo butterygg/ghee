@@ -7,7 +7,6 @@ import { console } from "forge-std/src/console.sol";
 import { MarketFactory } from "../src/MarketFactory.sol";
 import { Market } from "../src/Market.sol";
 import { OutcomeToken } from "../src/OutcomeToken.sol";
-import { MarketMaker } from "../src/MarketMaker.sol";
 import { Oracle } from "../src/Oracle.sol";
 import { OutcomeToken } from "../src/OutcomeToken.sol";
 
