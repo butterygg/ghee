@@ -1,47 +1,49 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./MarketMaker.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./Oracle.sol";
-import "./OutcomeToken.sol";
+import {IConditionalTokens} from "./interfaces/IConditionalTokens.sol";
+import {IConditionalTokensFactory} from "./interfaces/IConditionalTokensFactory.sol";
+import {IFixedProductMarketMakerFactory} from "./interfaces/IFixedProductMarketMakerFactory.sol";
 
 contract Market {
     bytes32 public questionId;
-    MarketMaker public marketMaker;
     Oracle public oracle;
+    IERC20 public collateralToken;
+    IFixedProductMarketMaker public fixedProductMarketMaker;
+    IConditionalTokens public conditionalTokens;
     bool public isResolved;
     bool public outcome;
-    OutcomeToken public longToken;
-    OutcomeToken public shortToken;
 
-    constructor(bytes32 _questionId, string memory _tokenName, Oracle _oracle) {
+    // TODO: dumb contructor + init function
+    constructor(
+        bytes32 _questionId,
+        string memory _tokenName,
+        Oracle _oracle,
+        // TODO: flatten: call these 2 in MarketFactory:
+        IConditionalTokensFactory _conditionalTokensFactory
+        IFixedProductMarketMakerFactory _fixedProductMarketMakerFactory,
+        IERC20 _collateralToken
+    ) {
         questionId = _questionId;
-
-        longToken =
-            new OutcomeToken(string(abi.encodePacked("Long ", _tokenName)), string(abi.encodePacked("L", _tokenName)));
-        shortToken =
-            new OutcomeToken(string(abi.encodePacked("Short ", _tokenName)), string(abi.encodePacked("S", _tokenName)));
-
-        marketMaker = new MarketMaker(longToken, shortToken);
-        oracle = _oracle;
-    }
-
-    function split() external payable {
-        uint256 amount = msg.value;
-
-        longToken.mint(msg.sender, amount);
-        shortToken.mint(msg.sender, amount);
-    }
-
-    function merge(uint256 amount) external {
-        require(
-            longToken.balanceOf(msg.sender) >= amount && shortToken.balanceOf(msg.sender) >= amount,
-            "Insufficient balance"
+        collateralToken = _collateralToken;
+        conditionalTokens = _conditionalTokensFactory.createBinaryConditionalTokens(
+            address(_oracle),
+            _questionId
         );
-
-        longToken.burn(msg.sender, amount);
-        shortToken.burn(msg.sender, amount);
-        payable(msg.sender).transfer(amount);
+        _conditionId0 = 
+        fixedProductMarketMaker = _fixedProductMarketMakerFactory.createFixedProductMarketMaker(
+            _conditionalTokens,
+            collateralToken,
+            [
+                conditionalTokens.getConditionId(address(_oracle), _questionId, 0),
+                conditionalTokens.getConditionId(address(_oracle), _questionId, 1)
+            ],
+            0
+        );
+        oracle = _oracle;
     }
 
     function resolveMarket() external {
